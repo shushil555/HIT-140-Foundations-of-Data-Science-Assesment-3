@@ -1,0 +1,61 @@
+
+import pandas as pd
+import numpy as np
+
+# 1. Load the dataset
+df = pd.read_csv('dataset1.csv')
+print("Initial Data Overview:")
+print(df.info())
+print(df.head())
+
+# 2. Check for missing values
+print("\nMissing Values in Each Column:")
+print(df.isnull().sum())
+
+# Fill missing values (example strategies)
+for col in df.columns:
+    if df[col].dtype == 'object':  # For text columns
+        df[col] = df[col].fillna('Unknown')
+    else:  # For numeric columns
+        df[col] = df[col].fillna(df[col].mean())
+
+# 3. Remove duplicate rows
+df = df.drop_duplicates()
+print("\nData after removing duplicates:")
+print(df.shape)
+
+# 4. Correct data types
+# Example: convert numeric columns stored as text
+for col in df.columns:
+    if df[col].dtype == 'object':
+        try:
+            df[col] = pd.to_numeric(df[col], errors='ignore')
+        except:
+            pass
+
+# Example: convert date columns if any
+# df['date_column'] = pd.to_datetime(df['date_column'], errors='coerce')
+
+# 5. Handle outliers (numeric columns only)
+numeric_cols = df.select_dtypes(include=[np.number]).columns
+for col in numeric_cols:
+    mean = df[col].mean()
+    std = df[col].std()
+    df = df[np.abs(df[col] - mean) <= (3*std)]  # Keep values within 3 std deviations
+
+# 6. Standardize text columns (lowercase)
+text_cols = df.select_dtypes(include=['object']).columns
+for col in text_cols:
+    df[col] = df[col].str.lower()
+
+# 7. Reset index after cleaning
+df = df.reset_index(drop=True)
+
+# 8. Save cleaned dataset
+df.to_csv('dataset1_cleaned.csv', index=False)
+print("\nCleaned dataset saved as 'dataset1_cleaned.csv'")
+
+# 9. Final overview
+print("\nCleaned Data Overview:")
+print(df.info())
+print(df.head())
